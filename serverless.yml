@@ -1,0 +1,44 @@
+service: airtime-bot-v3
+frameworkVersion: '3'
+
+useDotenv: true
+
+plugins:
+  - serverless-plugin-typescript
+  - serverless-plugin-telegram-webhook
+
+custom:
+  telegramWebhook:
+    token: ${env:BOT_TOKEN}
+    webhook:
+      type: function
+      value: webhook
+
+provider:
+  name: aws
+  deploymentMethod: 'direct'
+  region: us-east-1
+  runtime: nodejs18.x
+  timeout: 35
+  environment:
+    BOT_TOKEN: ${env:BOT_TOKEN}
+    AIRTABLE_TOKEN: ${env:AIRTABLE_TOKEN}
+    FLW_SECRET_KEY: ${env:FLW_SECRET_KEY}
+
+functions:
+  # reply to telegram requests/messages
+  webhook:
+    handler: src/index.handler
+    events:
+      - http:
+          path: /1af3465b
+          method: post
+          cors: true
+
+  # run weekly schedule of airtime requests
+  task:
+    handler: src/task.handler
+    timeout: 90
+    events:
+      - schedule: 'cron(0 5 ? * 2 *)'
+
