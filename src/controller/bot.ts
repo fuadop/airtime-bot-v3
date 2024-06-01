@@ -2,7 +2,8 @@ import { Context, MiddlewareFn, NarrowedContext } from 'telegraf';
 import { ChatJoinRequest, Message, Update } from 'telegraf/typings/core/types/typegram';
 import Database from '../service/database';
 import Phone from '../service/phone';
-import Vendor from '../service/vendor';
+// import Vendor from '../service/vendor/flutterwave';
+import Vendor from '../service/vendor/vtu-ng';
 import { injectable } from 'inversify';
 
 type TextContext = NarrowedContext<
@@ -161,11 +162,13 @@ class BotController {
 			if (!res.data)
 				throw new Error(res.message ?? 'Vendor API Error');
 
-			await ctx.reply(`💰 Your wallet balance is ₦ ${res.data.available_balance}.`);
+			let message = `💰 Your wallet balance is ₦ ${res.data.available_balance}.`;
 
 			const resp = await this._vendor.getSummary();
 
-			return await ctx.reply(`📊 *Stats*\n\nSpent: ₦ ${resp.sum_bills}\nSaved: ₦ ${resp.sum_commission}\nRecharges: ${resp.count_airtime}.`);
+			message += resp ? `\n📊 *Stats*\n\nSpent: ₦ ${resp.sum_bills}\nSaved: ₦ ${resp.sum_commission}\nRecharges: ${resp.count_airtime}.` : '';
+
+			return await ctx.reply(message);
 		} catch (error) {
 			return await ctx.reply('❌ Request failed due to: ' + error.message ?? error.name);
 		};

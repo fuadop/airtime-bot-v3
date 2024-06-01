@@ -1,6 +1,7 @@
 import { Container } from 'inversify';
 import Database from './service/database';
-import Vendor from './service/vendor';
+// import Vendor from './service/vendor/flutterwave';
+import Vendor from './service/vendor/vtu-ng';
 import BotController from './controller/bot';
 import Bot from './service/bot';
 

@@ -2,7 +2,7 @@ import 'reflect-metadata';
 import container from './inversify.config';
 
 import Bot from './service/bot';
-import Vendor from './service/vendor';
+import Vendor from './service/vendor/vtu-ng';
 import Database, { Schedule } from './service/database';
 
 // set up DI

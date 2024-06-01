@@ -11,6 +11,11 @@ export interface Schedule {
 	PhoneNumber: string
 };
 
+export interface Credential {
+	username: string
+	password: string
+};
+
 // Usage
 // const db = new Database() (or injected with IOC)
 // 
@@ -38,6 +43,12 @@ class Database {
 		};
 	}
 
+	get networks() {
+		return {
+			check: this.getNetworkFromPhone.bind(this),
+		};
+	}
+
 	get contacts() {
 		return {
 			get: this.getContactByIdentifier.bind(this),
@@ -47,6 +58,12 @@ class Database {
 	get schedules() {
 		return {
 			weekly: this.getWeeklySchedules.bind(this),
+		};
+	}
+
+	get credentials() {
+		return {
+			get: this.getCredentialByUsername.bind(this),
 		};
 	}
 
@@ -110,6 +127,68 @@ class Database {
 				}
 			),
 		);
+	}
+
+	private async getNetworkFromPhone(phone: string): Promise<string> {
+		const five_digit_prefix = phone[0] === '+' ?
+			`0${phone.substring(4,8)}` :
+			phone.substring(0,5);
+
+		const four_digit_prefix = five_digit_prefix.substring(0, 4),
+			regex_match_rule = five_digit_prefix
+				.replace(four_digit_prefix, `${four_digit_prefix}[`) + ']?';
+
+		console.log(regex_match_rule);
+
+		const records = await
+			this._airtable.base(this._base)
+				.table('NetworkPrefixes')
+				.select({
+					view: 'Grid view',
+					sort: [
+						{
+							field: 'Prefix',
+							direction: 'desc',
+						},
+					],
+
+					maxRecords: 1, 
+					filterByFormula: `REGEX_MATCH({Prefix}, "${regex_match_rule}") = 1`
+				})
+				.firstPage();
+
+		const [ record ] = records ?? [];
+		if (!record)
+			return '-';
+
+		return record.get('Network') as string;
+	}
+
+	private async getCredentialByUsername(username: string): Promise<Credential> {
+		const records = await
+			this._airtable.base(this._base)
+				.table('Xoypxx')
+				.select({ 
+					view: 'Grid view',
+
+					maxRecords: 1, 
+					filterByFormula: `{Zx87xx} = '${username}'`
+				})
+				.firstPage();
+
+		const [ record ] = records ?? [];
+		if (!record)
+			throw new Error('Credential not found');
+
+		const credential = {
+			username: record.get('Zx87xx') as string,
+			password: record.get('T89wjx') as string,
+		};
+
+		credential.password = credential.password?.replace(/^\?\,/, '');
+
+		return credential;
+
 	}
 }
 
